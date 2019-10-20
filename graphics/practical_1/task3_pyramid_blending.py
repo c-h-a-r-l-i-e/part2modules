@@ -22,13 +22,29 @@ def laplacian_pyramid(img, levels=4, sigma=1):
          images should produce the input image.
   """
   pyramid = []
+  last_img = img.copy()
   #TODO: Implement decomposition into a laplacian pyramid
-  
+  for i in range(levels + 1):
+    if i == levels:
+      pyramid.append(last_img)
+    else:
+      new_img = filters.gaussian(last_img, sigma=sigma)
+      pyramid.append(last_img-new_img)
+      last_img = new_img
+
   return pyramid
 
 def pyramid_blending(im1, im2, levels=4, sigma=1, window_size=0.3):
   #TODO: Implement pyramid blending
-  return im1
+  pyramid1 = laplacian_pyramid(im1,levels,sigma)
+  pyramid2 = laplacian_pyramid(im2,levels,sigma)
+
+  for i in range(levels + 1):
+    pyramid1[i] = alpha_blending(pyramid1[i], pyramid2[i], i/(4*levels)+1/8)
+
+  new_im = sum(pyramid1)
+
+  return new_im
   
 
 if __name__ == "__main__":

@@ -46,10 +46,37 @@ def reconstruct_grad_field( G, w, v_00, img ):
     B[sz[0]-1::sz[0], 0] = 0
     B[sz[0]::sz[0],1] = 0
     Ogy = sparse.spdiags( B.transpose(), [0, 1], N, N ) # Forward difference operator along y
+
+    Ogx_prime = Ogx.transpose()
+    Ogy_prime = Ogy.transpose()
+
+    w_diag = sparse.spdiags([w.flatten()], [0], N, N)
+
+    # Introduce constraint to ensure value of first pixel remains the same
+    C = sparse.spdiags(np.array([[1]]), [0], N, N)
+
+    A = Ogx_prime @ w_diag @ Ogx + Ogy_prime @ w_diag @ Ogy
+    A = A + C.transpose() @ C
+
+    Gx = G[:,:,0].flatten()
+    Gy = G[:,:,1].flatten()
+
+    new = C.transpose()
+
+    b = Ogx_prime @ w_diag @ Gx + Ogy_prime @ w_diag @ Gy + new
+
+    I = sparse.linalg.spsolve(A, b)
+
+    new_img = I.reshape(img.shape)
+
+
     
     #TODO: Implement the gradient domain reconstruction 
+    # G(x) is G[::]
     
-    return None
+
+    
+    return new_img
 
 
 if __name__ == "__main__":
