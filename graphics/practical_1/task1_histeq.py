@@ -41,7 +41,7 @@ def equalise_hist(image, bin_count=256):
   return new_image
 
 # TODO: Change the file to your own image
-img_name = 'house.jpg'
+img_name = 'grass.jpg'
 
 test_im = io.imread(path.join('images',img_name))
 
@@ -58,7 +58,7 @@ plt.axis('off')
 plt.imshow(equalise_hist(test_im_gray),cmap='gray')
 
 plt.show()
-
+ 
 def he_per_channel(img):
   # Seperate out the r, g and b channels
   img_r = img[:,:,0]
@@ -108,22 +108,22 @@ test_im = io.imread(path.join('images',img_name))
 test_im = util.img_as_float(test_im)
 plt.figure(figsize=(15, 12))
 
-plt.subplot(221)
+plt.subplot(231)
 plt.title('Original image')
 plt.axis('off')
 io.imshow(test_im)
 
-plt.subplot(222)
+plt.subplot(232)
 plt.title('Each channel processed seperately')
 plt.axis('off')
 io.imshow(he_per_channel(test_im))
 
-plt.subplot(223)
+plt.subplot(234)
 plt.title('Gray-scale + colour ratio')
 plt.axis('off')
 io.imshow(he_colour_ratio(test_im))
 
-plt.subplot(224)
+plt.subplot(235)
 plt.title('Processed V in HSV')
 plt.axis('off')
 io.imshow(he_hsv(test_im))

@@ -16,6 +16,72 @@ from skimage import color
 from scipy import ndimage
 from sksparse.cholmod import cholesky
 import time
+from task4_grad_domain import img2grad_field
+
+USE_CHOLESKY=True
+
+
+def reconstruct_grad_domain( G, mask, bg ):
+    """Reconstruct a (greyscale) image from a gradcient domain
+    G - gradient field, for example created with img2grad_field
+    w - weight assigned to each gradient
+    mask - mask used to filter the image
+    bg - background image
+    """
+    sz = G.shape[:2] 
+    N = sz[0]*sz[1]
+
+
+    # Gradient operators as sparse matrices
+    o1 =  np.ones((N,1))
+    B = np.concatenate( (-o1, np.concatenate( (np.zeros((sz[0],1)), o1[:N-sz[0]]), 0 ) ), 1)
+    B[N-sz[0]:N,0] = 0
+    Ogx = sparse.spdiags(B.transpose(), [0 ,sz[0]], N, N ) # Forward difference operator along x
+
+    B = np.concatenate( (-o1 ,np.concatenate((np.array([[0]]), o1[0:N-1]) ,0)), 1)
+    B[sz[0]-1::sz[0], 0] = 0
+    B[sz[0]::sz[0],1] = 0
+    Ogy = sparse.spdiags( B.transpose(), [0, 1], N, N ) # Forward difference operator along y
+
+    Ogx_prime = Ogx.transpose()
+    Ogy_prime = Ogy.transpose()
+
+    # Calculate pixels which are in the boundary
+    boundary = []
+    h, w = mask.shape
+    for x in range(h):
+        for y in range(w):
+            if mask[x,y] == 1 and (x==0 or x==h-1 or y==0 or y==w-1 or min(mask[x,y-1], mask[x-1,y], mask[x+1,y], mask[x,y+1])==0):
+                boundary.append((x,y))
+
+    K = len(boundary)
+    # TODO: make this work just on place we need it!!!
+
+    E = sparse.csc_matrix((K, N))
+    T_E = np.zeros((K,))
+    for i, (x,y) in enumerate(boundary):
+        pos = y * sz[0] + x # Calulcate the pixel's position
+        E[i, pos] = 1
+        T_E[i] = bg[x,y]
+
+    A = Ogx_prime @ Ogx + Ogy_prime @ Ogy +  E.transpose() @ E
+
+    Gx = G[:,:,0].flatten('F')
+    Gy = G[:,:,1].flatten('F')
+
+    b = Ogx_prime @ Gx + Ogy_prime @ Gy + E.transpose() @ T_E
+
+    if USE_CHOLESKY:
+        factor = cholesky(A)
+        I = factor(b)
+
+    else:
+        I = sparse.linalg.spsolve(A, b)
+
+
+    new_img = I.reshape(bg.shape, order='F')
+
+    return new_img
 
 
 if __name__ == "__main__":
@@ -33,11 +99,26 @@ if __name__ == "__main__":
     #TODO: Implement gradient-domain copy&paste. 
     # Formulate the problem as explained in the practical 1
     # descrption - solve only for the pixels that are pasted.
+
+    new_fg = fg.copy()
+    for i in range(3): #For R, G and B
+        fg_i = fg[:,:,i]
+        G = img2grad_field(fg_i)
+        fgr = reconstruct_grad_domain(G, mask, bg[:,:,i])
+        new_fg[:,:,i] = fgr
+
+    mask3 = np.reshape(mask,[mask.shape[0], mask.shape[1], 1]) 
+    I_dest = new_fg *mask3 + bg*(1-mask3)
+
     
 
+
+
+ 
+
     # Naive copy-paste for comparision
-    mask3 = np.reshape(mask,[mask.shape[0], mask.shape[1], 1]) 
     I_naive = fg*mask3 + bg*(1-mask3)
+
     
     plt.figure(figsize=(9, 9))
 

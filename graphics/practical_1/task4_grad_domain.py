@@ -14,6 +14,8 @@ from scipy import signal
 import skimage
 import time
 
+USE_CHOLESKY = True
+
 def img2grad_field(img):
     """Return a gradient field for a greyscale image
     The function returns image [height,width,2], where the last dimension selects partial derivates along x or y
@@ -50,38 +52,35 @@ def reconstruct_grad_field( G, w, v_00, img ):
     Ogx_prime = Ogx.transpose()
     Ogy_prime = Ogy.transpose()
 
-    w_diag = sparse.spdiags([w.flatten()], [0], N, N)
+    w_diag = sparse.spdiags([w.flatten('F')], [0], N, N)
 
     # Introduce constraint to ensure value of first pixel remains the same
-    C = sparse.spdiags(np.array([[1]]), [0], N, N)
+    C = sparse.spdiags([[1]], [0], N, N)
 
-    A = Ogx_prime @ w_diag @ Ogx + Ogy_prime @ w_diag @ Ogy
-    A = A + C.transpose() @ C
+    A = Ogx_prime @ w_diag @ Ogx + Ogy_prime @ w_diag @ Ogy +  C
 
-    Gx = G[:,:,0].flatten()
-    Gy = G[:,:,1].flatten()
+    Gx = G[:,:,0].flatten('F')
+    Gy = G[:,:,1].flatten('F')
+    C2 = np.zeros((N,)) # Another constraint to ensure value of first pixel remains the same
+    C2[0] = v_00
 
-    new = C.transpose()
+    b = Ogx_prime @ w_diag @ Gx + Ogy_prime @ w_diag @ Gy + C2
 
-    b = Ogx_prime @ w_diag @ Gx + Ogy_prime @ w_diag @ Gy + new
+    if USE_CHOLESKY:
+        factor = cholesky(A)
+        I = factor(b)
 
-    I = sparse.linalg.spsolve(A, b)
+    else:
+        I = sparse.linalg.spsolve(A, b)
 
-    new_img = I.reshape(img.shape)
 
+    new_img = I.reshape(img.shape, order='F')
 
-    
-    #TODO: Implement the gradient domain reconstruction 
-    # G(x) is G[::]
-    
-
-    
     return new_img
 
 
 if __name__ == "__main__":
-    #TODO: Replace with your own image
-    im = io.imread(path.join('images','rubberduck.jpg'), as_gray=True)
+    im = io.imread(path.join('images','house.jpg'), as_gray=True)
     im = skimage.img_as_float(im)
 
     G = img2grad_field(im)
@@ -90,7 +89,11 @@ if __name__ == "__main__":
     #w = np.ones (img.shape)
     w = 1/(Gm + 0.0001)     # To avoid pinching artefacts
 
+    start = time.time()
     imr = reconstruct_grad_field(G,w,im[0,0], im).clip(0,1)
+    end = time.time()
+
+    print("Time to reconstruct field {}".format(end-start))
 
     plt.figure(figsize=(9, 3))
 

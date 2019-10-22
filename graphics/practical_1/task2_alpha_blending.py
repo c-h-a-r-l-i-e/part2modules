@@ -49,9 +49,9 @@ def alpha_blending(im1, im2, window_size=0.5):
 
 if __name__ == "__main__":
   # TODO: Replace with your own images
-  im1 = io.imread(path.join('images','cat_aligned.png'))
+  im1 = io.imread(path.join('images','football-l.jpg'))
   im1 = util.img_as_float(im1[:,:,:3])
-  im2 = io.imread(path.join('images','dog_aligned.png'))
+  im2 = io.imread(path.join('images','football-r.jpg'))
   im2 = util.img_as_float(im2[:,:,:3])
   plt.figure(figsize=(15, 12))
 
