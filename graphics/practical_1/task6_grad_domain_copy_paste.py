@@ -55,7 +55,6 @@ def reconstruct_grad_domain( G, mask, bg ):
                 boundary.append((x,y))
 
     K = len(boundary)
-    # TODO: make this work just on place we need it!!!
 
     E = sparse.csc_matrix((K, N))
     T_E = np.zeros((K,))
@@ -109,11 +108,6 @@ if __name__ == "__main__":
 
     mask3 = np.reshape(mask,[mask.shape[0], mask.shape[1], 1]) 
     I_dest = new_fg *mask3 + bg*(1-mask3)
-
-    
-
-
-
  
 
     # Naive copy-paste for comparision

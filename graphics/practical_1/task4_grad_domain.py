@@ -14,7 +14,7 @@ from scipy import signal
 import skimage
 import time
 
-USE_CHOLESKY = True
+USE_CHOLESKY = False
 
 def img2grad_field(img):
     """Return a gradient field for a greyscale image
