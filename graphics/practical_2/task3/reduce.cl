@@ -14,7 +14,7 @@ __kernel void reduce(__global const uchar*  buffer, __local int* scratch, __cons
     int accumulator = 0;
 
     // First stage: Sequencial summation by multiple threads
-    // TODO: Add sequencially elements of the array. 
+    // Add sequencially elements of the array. 
     // Each thread should sum all elements that are "get_global_size(0)" apart 
     // up to the end of the array (given by "length"). Then, put the result to 
     // "scratch".
@@ -28,8 +28,6 @@ __kernel void reduce(__global const uchar*  buffer, __local int* scratch, __cons
     // Second stage: perform reduction in the local memory
     // Sum all the elements in the scratch[] and store the result in 
     // result[get_group_id(0)]
-    // TODO: Adapt the reduction tree algorithm from the lecture 
-
 
     for (int offset = local_size / 2; offset > 0; offset >>= 1) {
         if (local_index < offset) {

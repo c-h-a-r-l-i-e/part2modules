@@ -84,7 +84,7 @@ int matrix_multiplication(uint platformID, uint deviceID, uint test_size) {
 		//-----------------------------------------------------
 		// STEP 7: Enqueue the kernel for execution
 		//----------------------------------------------------- 
-    // TODO: Pass below an appropriate size for the global work size using 1D cl::NDRange
+    // Pass below an appropriate size for the global work size using 2D cl::NDRange
         
         cl::NDRange range(test_size, test_size);
         queue.enqueueNDRangeKernel(kernel, cl::NullRange, range, cl::NullRange );

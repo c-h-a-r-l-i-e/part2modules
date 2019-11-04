@@ -35,18 +35,18 @@ __kernel void lfrender(__read_only image3d_t lfCamImages, // 3D Image with camer
         for (int j = 0; j < ncols; j++) { 
             int camera_index = i*ncols+j;
 
-            // TODO: Transform virtual camera pixel coords pk into array camera coords pi
-            float4 pi = mat_mul((__constant float4*)transKCi + (camera_index*16), pk);
+            // Transform virtual camera pixel coords pk into array camera coords pi
+            float4 pi = mat_mul((__constant float4*)(&transKCi[camera_index*16]), pk);
 
-            // TODO: Find the weight of the sample by calling aperture_func
+            // Find the weight of the sample by calling aperture_func
             float4 camPos = {CiPos[camera_index*3], CiPos[camera_index*3+1], CiPos[camera_index*3+2], 1.0f};
             float w = aperture_func(wa, camPos, apertureSize);
 
-            // TODO: Read a sample from the array camera images lfCamImages. Note that the sample must be "display_decoded".
+            // Read a sample from the array camera images lfCamImages. Note that the sample must be "display_decoded".
             float4 sample = read_imagef(lfCamImages, samp, (float4)(pi.x+0.5, pi.y+0.5, camera_index+0.5, 0));
             float3 sample_decoded = display_decode(sample.xyz);
 
-            // TODO: Add the weighted sample to "color" and update "weight"
+            // Add the weighted sample to "color" and update "weight"
             color += sample_decoded * w;
             weight += w;
         }
@@ -69,12 +69,12 @@ __kernel void lfrender(__read_only image3d_t lfCamImages, // 3D Image with camer
 */
 float aperture_func(float4 wa, float4 camPos, float apertureSize)
 {
-    //TODO: Implement an aperture function
+    // Implement an aperture function
     // The function should have a cone shape with the tip at 1 at camPos and 
     // a circular base at 0 of the diameter "apertureSize"
 
     float d = sqrt(pow(camPos.x - wa.x, 2) + pow(camPos.y - wa.y, 2));
-    float w = (apertureSize - d) / apertureSize;
+    float w = (apertureSize - d) / (apertureSize / 2);
     if (w < 0) w = 0;
     return w;
 }
